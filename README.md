@@ -1,4 +1,4 @@
-# GoTH Hello World
+# GoTH AVIAN (Hello World for right now)
 
 A small Go app that serves a styled Hello World landing page. It uses Echo for
 HTTP routing, Templ for server-side rendering, and the committed Tailwind CSS

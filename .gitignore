@@ -1,3 +1,17 @@
 # Credentials and local secrets
 *.pem
 .env
+
+# Go build and test outputs
+/goth-hello-world
+__debug_bin*
+*.test
+*.out
+coverage.out
+
+# Local development tools and editor state
+.tools/
+.vscode/*
+!.vscode/launch.json
+node_modules/
+.DS_Store

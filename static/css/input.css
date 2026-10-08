@@ -1,0 +1,4 @@
+/* Tailwind expands these directives into the generated output.css file. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

@@ -1,0 +1,17 @@
+[Unit]
+Description=GoTH Hello World web application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__APP_USER__
+Group=__APP_USER__
+WorkingDirectory=/opt/goth-hello-world
+Environment=PORT=8080
+ExecStart=/opt/goth-hello-world/goth-hello-world
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

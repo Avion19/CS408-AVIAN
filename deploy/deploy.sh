@@ -1,66 +1,42 @@
 #!/usr/bin/env bash
+# Build for the EC2 CPU, install the release, restart Avian, and check health.
 set -Eeuo pipefail
 
-APP_NAME="goth-hello-world"
-REMOTE_DIR="/opt/${APP_NAME}"
-EC2_USER="ubuntu"
-HOST=""
-SSH_KEY=""
-
-usage() {
-	cat <<'USAGE'
-Usage: ./deploy/deploy.sh -h <PUBLIC-IP-or-hostname> -i <path-to-pem> [-u <ssh-user>]
-
-Deploys this Go app to an EC2 server prepared with deploy/setup-ec2.sh.
-USAGE
-}
-
-while getopts ':h:i:u:' option; do
-	case "$option" in
-		h) HOST="$OPTARG" ;;
-		i) SSH_KEY="$OPTARG" ;;
-		u) EC2_USER="$OPTARG" ;;
-		*) usage >&2; exit 2 ;;
-	esac
-done
-
-if [[ -z "$HOST" || -z "$SSH_KEY" ]]; then
-	usage >&2
-	exit 2
+cd "$(dirname -- "${BASH_SOURCE[0]}")/.."
+: "${EC2_HOST:?Set EC2_HOST to the instance hostname or IP}"
+: "${SSH_KEY_PATH:?Set SSH_KEY_PATH to the private SSH key path}"
+EC2_USER="${EC2_USER:-ubuntu}"
+if [[ ! -r "$SSH_KEY_PATH" ]]; then
+  printf 'SSH key is unreadable: %s\n' "$SSH_KEY_PATH" >&2
+  exit 1
 fi
-if [[ ! -r "$SSH_KEY" ]]; then
-	printf 'Error: SSH key is missing or unreadable: %s\n' "$SSH_KEY" >&2
-	exit 1
-fi
-for tool in go rsync ssh curl; do
-	if ! command -v "$tool" >/dev/null 2>&1; then
-		printf 'Error: %s is required to deploy. Install it and run this script again.\n' "$tool" >&2
-		exit 1
-	fi
+for tool in ssh scp rsync curl; do
+  command -v "$tool" >/dev/null 2>&1 || { printf '%s is required.\n' "$tool" >&2; exit 1; }
 done
+go_bin=go
+if ! command -v go >/dev/null 2>&1; then
+  go_bin=./.tools/go/bin/go
+  [[ -x "$go_bin" ]] || { printf 'Go is required. Run ./start.sh or install Go first.\n' >&2; exit 1; }
+fi
 
-SSH_TARGET="${EC2_USER}@${HOST}"
-SSH_OPTIONS=(-i "$SSH_KEY" -o BatchMode=yes -o StrictHostKeyChecking=accept-new)
-printf 'Running project tests before deployment...\n'
-go test ./...
+target="${EC2_USER}@${EC2_HOST}"
+ssh_options=(-i "$SSH_KEY_PATH" -o BatchMode=yes -o StrictHostKeyChecking=accept-new)
+machine="$(ssh "${ssh_options[@]}" "$target" uname -m)"
+case "$machine" in
+  x86_64|amd64) architecture=amd64 ;;
+  aarch64|arm64) architecture=arm64 ;;
+  *) printf 'Unsupported EC2 architecture: %s\n' "$machine" >&2; exit 1 ;;
+esac
 
-printf 'Copying the project to %s:%s...\n' "$SSH_TARGET" "$REMOTE_DIR"
-ssh "${SSH_OPTIONS[@]}" "$SSH_TARGET" "mkdir -p '${REMOTE_DIR}'"
-printf -v RSYNC_SSH 'ssh -i %q -o BatchMode=yes -o StrictHostKeyChecking=accept-new' "$SSH_KEY"
-rsync -az --delete -e "$RSYNC_SSH" \
-	--exclude='/.git/' \
-	--exclude='.env' \
-	--exclude='*.pem' \
-	--exclude='/.tools/' \
-	--exclude='/.vscode/' \
-	--exclude='/goth-hello-world' \
-	./ "${SSH_TARGET}:${REMOTE_DIR}/"
-
-printf 'Building the app and restarting its systemd service...\n'
-ssh "${SSH_OPTIONS[@]}" "$SSH_TARGET" \
-	"cd '${REMOTE_DIR}' && /usr/local/go/bin/go mod download && /usr/local/go/bin/go build -o '${APP_NAME}' . && sudo systemctl restart '${APP_NAME}.service' && sudo systemctl is-active --quiet '${APP_NAME}.service'"
-
-printf 'Checking the deployed app at http://%s/api/health...\n' "$HOST"
-curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-connrefused \
-	--max-time 5 "http://${HOST}/api/health" >/dev/null
-printf 'Deployment succeeded: http://%s/\n' "$HOST"
+stage="$(mktemp -d /tmp/avian-deploy.XXXXXX)"
+trap 'rm -rf "$stage"' EXIT
+# The pure-Go SQLite driver allows a cross-compiled Linux binary.
+GOOS=linux GOARCH="$architecture" CGO_ENABLED=0 "$go_bin" build -o "$stage/avian" .
+ssh "${ssh_options[@]}" "$target" 'mkdir -p ~/avian-stage/static'
+scp "${ssh_options[@]}" "$stage/avian" "$target:avian-stage/avian"
+printf -v rsync_ssh 'ssh -i %q -o BatchMode=yes -o StrictHostKeyChecking=accept-new' "$SSH_KEY_PATH"
+rsync -az -e "$rsync_ssh" static/ "$target:avian-stage/static/"
+# /var/lib/avian and /etc/avian are untouched, so updates retain data and secrets.
+ssh "${ssh_options[@]}" "$target" 'sudo install -m 0755 ~/avian-stage/avian /opt/avian/avian && sudo cp -a ~/avian-stage/static/. /opt/avian/static/ && sudo systemctl restart avian.service && sudo systemctl is-active --quiet avian.service'
+curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-connrefused "http://${EC2_HOST}/api/health" >/dev/null
+printf 'Avian is live at http://%s/\n' "$EC2_HOST"

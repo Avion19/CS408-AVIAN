@@ -1,78 +1,52 @@
 #!/usr/bin/env bash
+# One-time Ubuntu EC2 setup: service account, persistent data, systemd, Nginx.
 set -Eeuo pipefail
 
-APP_NAME="goth-hello-world"
-APP_DIR="/opt/${APP_NAME}"
-GO_INSTALL_DIR="/usr/local/go"
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-
-if (( EUID != 0 )); then
-	printf 'Run this script on the EC2 server with sudo: sudo bash deploy/setup-ec2.sh\n' >&2
-	exit 1
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+if ((EUID != 0)); then
+  printf 'Run with sudo on an Ubuntu EC2 server.\n' >&2
+  exit 1
 fi
-if ! command -v systemctl >/dev/null 2>&1; then
-	printf 'Error: this setup requires a systemd-based EC2 image.\n' >&2
-	exit 1
+if ! command -v apt-get >/dev/null 2>&1; then
+  printf 'This setup supports Ubuntu LTS with apt-get.\n' >&2
+  exit 1
 fi
 
-APP_USER="${SUDO_USER:-}"
-if [[ -z "$APP_USER" || "$APP_USER" == root ]]; then
-	for candidate in ubuntu ec2-user; do
-		if id "$candidate" >/dev/null 2>&1; then
-			APP_USER="$candidate"
-			break
-		fi
-	done
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl nginx rsync
+if ! id avian >/dev/null 2>&1; then
+  useradd --system --home-dir /var/lib/avian --shell /usr/sbin/nologin avian
 fi
-if [[ -z "$APP_USER" ]] || ! id "$APP_USER" >/dev/null 2>&1; then
-	printf 'Error: could not identify the EC2 login user. Run this with sudo from the ubuntu or ec2-user account.\n' >&2
-	exit 1
+install -d -m 0755 -o root -g root /opt/avian /opt/avian/static /etc/avian
+install -d -m 0700 -o avian -g avian /var/lib/avian /var/lib/avian/uploads
+
+# Preserve the secret and database configuration on repeated setup runs.
+if [[ ! -f /etc/avian/avian.env ]]; then
+  umask 077
+  secret="$(od -An -tx1 -N32 /dev/urandom | tr -d ' \n')"
+  cat > /etc/avian/avian.env <<EOF
+LISTEN_ADDR=127.0.0.1:8080
+DATABASE_PATH=/var/lib/avian/avian.db
+UPLOAD_DIR=/var/lib/avian/uploads
+SESSION_SECRET=${secret}
+EOF
+fi
+chmod 0600 /etc/avian/avian.env
+chown root:root /etc/avian/avian.env
+install -m 0644 "${script_dir}/avian.service" /etc/systemd/system/avian.service
+
+# Remove the prior course demo service when upgrading the existing instance.
+if [[ "$(systemctl list-unit-files goth-hello-world.service --no-legend 2>/dev/null)" == goth-hello-world.service* ]]; then
+  systemctl disable --now goth-hello-world.service
 fi
 
-if command -v apt-get >/dev/null 2>&1; then
-	apt-get update
-	DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl nginx rsync tar
-elif command -v dnf >/dev/null 2>&1; then
-	dnf install -y ca-certificates curl nginx rsync tar
-elif command -v yum >/dev/null 2>&1; then
-	yum install -y ca-certificates curl nginx rsync tar
-else
-	printf 'Error: supported package managers are apt-get, dnf, and yum.\n' >&2
-	exit 1
-fi
-
-case "$(uname -m)" in
-	x86_64|amd64) GO_ARCH="amd64" ;;
-	aarch64|arm64) GO_ARCH="arm64" ;;
-	*) printf 'Error: unsupported EC2 CPU architecture: %s\n' "$(uname -m)" >&2; exit 1 ;;
-esac
-
-GO_VERSION="$(curl --fail --silent --show-error --location --retry 3 'https://go.dev/VERSION?m=text' | sed -n '1p')"
-if [[ ! "$GO_VERSION" =~ ^go[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
-	printf 'Error: Go download service returned an unexpected version: %s\n' "$GO_VERSION" >&2
-	exit 1
-fi
-GO_ARCHIVE="/tmp/${APP_NAME}-${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
-curl --fail --show-error --location --retry 3 \
-	-o "$GO_ARCHIVE" "https://go.dev/dl/${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
-rm -rf "$GO_INSTALL_DIR"
-tar -C /usr/local -xzf "$GO_ARCHIVE"
-rm -f "$GO_ARCHIVE"
-
-install -d -m 0755 -o "$APP_USER" -g "$APP_USER" "$APP_DIR"
-sed "s/__APP_USER__/${APP_USER}/g" "${SCRIPT_DIR}/${APP_NAME}.service" \
-	> "/etc/systemd/system/${APP_NAME}.service"
-chmod 0644 "/etc/systemd/system/${APP_NAME}.service"
-
-cat > "/etc/nginx/conf.d/${APP_NAME}.conf" <<'NGINX'
+cat > /etc/nginx/conf.d/avian.conf <<'NGINX'
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
     server_name _;
-
     location / {
         proxy_pass http://127.0.0.1:8080;
-        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -81,12 +55,9 @@ server {
 }
 NGINX
 
-# Remove the packaged catch-all site so this server remains the sole default.
-rm -f /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf
+rm -f /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/goth-hello-world.conf
 nginx -t
 systemctl daemon-reload
-systemctl enable "${APP_NAME}.service"
-systemctl enable nginx
+systemctl enable avian.service nginx
 systemctl restart nginx
-
-printf 'EC2 setup is ready for %s. Deploy the repository from your laptop with deploy/deploy.sh.\n' "$APP_NAME"
+printf 'EC2 setup is ready. Deploy Avian from your laptop with deploy/deploy.sh.\n'

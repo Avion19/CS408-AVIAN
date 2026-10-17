@@ -1,6 +1,7 @@
 # Credentials and local secrets
 *.pem
 .env
+/data/
 
 # Go build and test outputs
 /goth-hello-world

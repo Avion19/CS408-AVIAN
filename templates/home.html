@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Avian · Birdwatching together</title>
+  <link rel="stylesheet" href="/static/css/avian.css">
+</head>
+<body>
+  <header class="site-header"><div class="wrap"><strong>Avian</strong><span>A place for birdwatchers</span></div></header>
+  <main class="wrap">
+    <section class="hero">
+      <p class="eyebrow">Welcome to Avian</p>
+      <h1>Keep your eyes on the sky.</h1>
+      <p>Avian is taking shape as a place to record bird observations, explore local species, and gather with fellow birdwatchers.</p>
+    </section>
+    <section aria-labelledby="species-heading">
+      <div class="section-heading"><div><p class="eyebrow">From our catalog</p><h2 id="species-heading">Birds to look for</h2></div><span>{{len .}} species</span></div>
+      <div class="species-grid">
+        {{range .}}
+        <article class="species-card">
+          <h3>{{.CommonName}}</h3>
+          <p class="scientific"><em>{{.ScientificName}}</em></p>
+          <p>{{.Description}}</p>
+          <p class="habitat"><strong>Habitat:</strong> {{.Habitat}}</p>
+          <a href="{{.SourceURL}}" rel="noopener noreferrer" target="_blank">Learn more at {{.SourceName}}</a>
+        </article>
+        {{else}}<p>The species catalog is being prepared.</p>{{end}}
+      </div>
+    </section>
+  </main>
+  <footer><div class="wrap">Avian · CS 408 project foundation</div></footer>
+</body>
+</html>

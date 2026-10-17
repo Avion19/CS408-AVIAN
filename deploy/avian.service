@@ -1,0 +1,17 @@
+[Unit]
+Description=Avian web application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=avian
+Group=avian
+WorkingDirectory=/opt/avian
+EnvironmentFile=/etc/avian/avian.env
+ExecStart=/opt/avian/avian
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

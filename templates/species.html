@@ -1,0 +1,19 @@
+{{template "header" .}}<section class="container page-section">
+<p class="eyebrow">The field guide</p>
+<h1>Birds to look for.</h1>
+<p class="lead mb-5">A few familiar neighbors, and something new to notice.</p>
+<div class="row g-4">{{range .Species}}<div class="col-md-6 col-lg-4">
+<article class="species-card h-100" id="species-{{.ID}}">
+<h2 class="h4">{{.CommonName}}</h2>
+<p class="scientific">
+<em>{{.ScientificName}}</em>
+</p>
+<p>{{.Description}}</p>
+<p class="habitat">
+<strong>Where to look</strong>
+<br>{{.Habitat}}</p>
+<a href="{{.SourceURL}}" rel="noopener noreferrer" target="_blank">Learn more at {{.SourceName}} <span aria-hidden="true">↗</span>
+</a>
+</article>
+</div>{{end}}</div>
+</section>{{template "footer" .}}

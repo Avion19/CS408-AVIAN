@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/labstack/echo/v4 v4.13.0
+	golang.org/x/crypto v0.26.0
 	modernc.org/sqlite v1.29.10
 )
 
@@ -18,7 +19,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect

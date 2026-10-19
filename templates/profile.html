@@ -1,0 +1,11 @@
+{{template "header" .}}<section class="container page-section message-page">
+<p class="eyebrow">A member of the flock</p>
+<div class="profile-badge" aria-hidden="true">✦</div>
+<h1>{{.Profile.DisplayName}}</h1>
+<p class="lead">@{{.Profile.Username}}</p>{{if .Profile.Region}}<p>{{.Profile.Region}}</p>{{end}}{{if .Profile.Bio}}<p class="profile-bio">{{.Profile.Bio}}</p>{{end}}<p>Every discovery begins with a little curiosity.</p>
+<div class="hero-actions">
+<a class="btn btn-forest" href="/species">Explore the birds <span aria-hidden="true">→</span>
+</a>
+<a class="text-link" href="/feed">Visit the community Feed</a>
+</div>
+</section>{{template "footer" .}}

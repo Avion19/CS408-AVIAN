@@ -1,34 +1,126 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Avian · Birdwatching together</title>
-  <link rel="stylesheet" href="/static/css/avian.css">
-</head>
-<body>
-  <header class="site-header"><div class="wrap"><strong>Avian</strong><span>A place for birdwatchers</span></div></header>
-  <main class="wrap">
-    <section class="hero">
-      <p class="eyebrow">Welcome to Avian</p>
-      <h1>Keep your eyes on the sky.</h1>
-      <p>Avian is taking shape as a place to record bird observations, explore local species, and gather with fellow birdwatchers.</p>
-    </section>
-    <section aria-labelledby="species-heading">
-      <div class="section-heading"><div><p class="eyebrow">From our catalog</p><h2 id="species-heading">Birds to look for</h2></div><span>{{len .}} species</span></div>
-      <div class="species-grid">
-        {{range .}}
-        <article class="species-card">
-          <h3>{{.CommonName}}</h3>
-          <p class="scientific"><em>{{.ScientificName}}</em></p>
-          <p>{{.Description}}</p>
-          <p class="habitat"><strong>Habitat:</strong> {{.Habitat}}</p>
-          <a href="{{.SourceURL}}" rel="noopener noreferrer" target="_blank">Learn more at {{.SourceName}}</a>
-        </article>
-        {{else}}<p>The species catalog is being prepared.</p>{{end}}
-      </div>
-    </section>
-  </main>
-  <footer><div class="wrap">Avian · CS 408 project foundation</div></footer>
-</body>
-</html>
+{{template "header" .}}
+<section class="hero">
+<div class="container hero-layout">
+<div class="hero-copy">
+<p class="eyebrow">
+<span aria-hidden="true">✦</span> A gathering place for birdwatchers</p>
+<h1>Small moments.<br>
+<em>Wild discoveries.</em>
+</h1>
+<p class="hero-description">A flash of wings. A song you stop to hear. Avian is a place to share what you notice, discover local birds, and find your flock.</p>
+<div class="hero-actions">{{if .Current}}<a class="btn btn-forest" href="/chirps/form">Write a chirp <span aria-hidden="true">↗</span>
+</a>{{else}}<a class="btn btn-forest" href="/login?tab=register">Find your place in the flock <span aria-hidden="true">↗</span>
+</a>{{end}}<a class="text-link" href="/species">Explore the birds <span aria-hidden="true">→</span>
+</a>
+</div>
+<div class="hero-caption">
+<span class="caption-rule">
+</span>For first sightings, familiar calls, and everything in between.</div>
+</div>
+<figure class="hero-art">
+<img src="/static/images/field-notes.svg" width="600" height="520" alt="Original illustration of a goldfinch resting on a leafy branch beneath a warm sun">
+<figcaption>
+<span>FIELD NOTES, NO. 001</span>
+<span>Look a little closer.</span>
+</figcaption>
+</figure>
+</div>
+</section>
+<section class="intro-strip">
+<div class="container intro-grid">
+<div>
+<span class="step-number">01</span>
+<div>
+<h2>Notice something</h2>
+<p>Every birding story starts with looking up.</p>
+</div>
+</div>
+<div>
+<span class="step-number">02</span>
+<div>
+<h2>Share a chirp</h2>
+<p>A field journal made for sharing discoveries.</p>
+</div>
+</div>
+<div>
+<span class="step-number">03</span>
+<div>
+<h2>Find your flock</h2>
+<p>Connect with people who share your curiosity.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="container page-section">
+<div class="section-heading">
+<div>
+<p class="eyebrow">Just outside your window</p>
+<h2>Get to know your neighbors.</h2>
+</div>
+<a class="text-link" href="/species">Browse the species catalog <span aria-hidden="true">→</span>
+</a>
+</div>
+<div class="row g-4">{{range .Species}}<div class="col-md-4">
+<article class="species-card h-100">
+<span class="card-label">From the field guide</span>
+<h3>
+<a href="/species?selected={{.ID}}">{{.CommonName}}</a>
+</h3>
+<p class="scientific">
+<em>{{.ScientificName}}</em>
+</p>
+<p>{{.Description}}</p>
+<p class="habitat">
+<strong>Where to look</strong>
+<br>{{.Habitat}}</p>
+</article>
+</div>{{end}}</div>
+</section>
+<section class="community-section">
+<div class="container page-section">
+<div class="section-heading">
+<div>
+<p class="eyebrow">From the community</p>
+<h2>A few recent chirps.</h2>
+</div>
+<a class="text-link" href="/feed">Visit the Feed <span aria-hidden="true">→</span>
+</a>
+</div>
+<div class="row g-4">{{range .Chirps}}<div class="col-md-4">
+<article class="species-card h-100">
+<a class="author-link" href="/members/{{.MemberID}}">{{.DisplayName}} <span>@{{.Username}}</span>
+</a>
+<p class="chirp-content">{{.Content}}</p>
+<time class="small text-secondary" datetime="{{.CreatedAt}}">{{.CreatedAt}}</time>{{if .FlockID.Valid}}<p>
+<a href="/flocks/{{.FlockID.Int64}}">{{.FlockName.String}}</a>
+</p>{{end}}</article>
+</div>{{else}}<div class="col-12">
+<div class="empty-state">
+<img src="/static/images/mark.svg" width="46" height="46" alt="">
+<div>
+<h3>A quiet morning. A new beginning.</h3>
+<p>The community is just taking flight. There are no public chirps yet.</p>
+</div>
+<a class="btn btn-outline-forest" href="/chirps/form">Start your field journal <span aria-hidden="true">↗</span>
+</a>
+</div>
+</div>{{end}}</div>
+</div>
+</section>
+<section class="container page-section">
+<div class="flock-invitation">
+<div>
+<p class="eyebrow">Better with a little company</p>
+<h2>There’s a flock for you.</h2>
+<p>Local trails, favorite species, shared curiosity. Find your people and make your next outing a little more memorable.</p>
+</div>
+<div class="invitation-actions">
+<a class="btn btn-forest" href="/flocks">Explore flocks <span aria-hidden="true">→</span>
+</a>
+<a class="text-link" href="/flocks/new">Start a flock of your own</a>
+<a class="text-link" href="/search">Search community observations</a>
+<a class="text-link" href="/me">Visit your profile</a>
+</div>
+</div>
+</section>
+{{template "footer" .}}

@@ -1,0 +1,9 @@
+{{template "header" .}}<section class="container page-section message-page">
+<p class="eyebrow">Out in the field</p>
+<h1>{{.Title}}</h1>
+<p class="lead">{{.Message}}</p>
+<div class="hero-actions">
+<a class="btn btn-forest" href="/species">Explore the birds <span aria-hidden="true">→</span>
+</a>
+<a class="text-link" href="/">Back to Home</a>{{if .Current}}<a class="text-link" href="/me">My profile</a>{{else}}<a class="text-link" href="/login?tab=register">Join the community</a>{{end}}</div>
+</section>{{template "footer" .}}

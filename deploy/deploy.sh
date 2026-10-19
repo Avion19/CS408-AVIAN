@@ -13,6 +13,16 @@ fi
 for tool in ssh scp rsync curl; do
   command -v "$tool" >/dev/null 2>&1 || { printf '%s is required.\n' "$tool" >&2; exit 1; }
 done
+if [[ -n "$(git status --porcelain)" ]]; then
+  printf 'Commit your changes before deploying so the release matches its source commit.\n' >&2
+  exit 1
+fi
+revision="$(git rev-parse HEAD)"
+deploy_tag="${DEPLOY_TAG:-cp2}"
+if [[ "$(git rev-parse "$deploy_tag^{commit}")" != "$revision" ]]; then
+  printf 'Deploy from the commit tagged %s.\n' "$deploy_tag" >&2
+  exit 1
+fi
 go_bin=go
 if ! command -v go >/dev/null 2>&1; then
   go_bin=./.tools/go/bin/go
@@ -31,12 +41,17 @@ esac
 stage="$(mktemp -d /tmp/avian-deploy.XXXXXX)"
 trap 'rm -rf "$stage"' EXIT
 # The pure-Go SQLite driver allows a cross-compiled Linux binary.
-GOOS=linux GOARCH="$architecture" CGO_ENABLED=0 "$go_bin" build -o "$stage/avian" .
+GOOS=linux GOARCH="$architecture" CGO_ENABLED=0 "$go_bin" build -trimpath -ldflags "-X main.buildRevision=$revision" -o "$stage/avian" .
 ssh "${ssh_options[@]}" "$target" 'mkdir -p ~/avian-stage/static'
 scp "${ssh_options[@]}" "$stage/avian" "$target:avian-stage/avian"
 printf -v rsync_ssh 'ssh -i %q -o BatchMode=yes -o StrictHostKeyChecking=accept-new' "$SSH_KEY_PATH"
 rsync -az -e "$rsync_ssh" static/ "$target:avian-stage/static/"
 # /var/lib/avian and /etc/avian are untouched, so updates retain data and secrets.
-ssh "${ssh_options[@]}" "$target" 'sudo install -m 0755 ~/avian-stage/avian /opt/avian/avian && sudo cp -a ~/avian-stage/static/. /opt/avian/static/ && sudo systemctl restart avian.service && sudo systemctl is-active --quiet avian.service'
-curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-connrefused "http://${EC2_HOST}/api/health" >/dev/null
-printf 'Avian is live at http://%s/\n' "$EC2_HOST"
+ssh "${ssh_options[@]}" "$target" 'sudo install -m 0755 ~/avian-stage/avian /opt/avian/avian.new && sudo mv /opt/avian/avian.new /opt/avian/avian && sudo cp -a ~/avian-stage/static/. /opt/avian/static/ && sudo systemctl restart avian.service'
+headers="$(curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-connrefused --retry-all-errors --connect-timeout 10 --max-time 15 --dump-header - "http://${EC2_HOST}/api/health")"
+if ! printf '%s\n' "$headers" | tr -d '\r' | grep -Fqi "X-Avian-Revision: $revision"; then
+  printf 'The public site did not report the expected source commit: %s\n' "$revision" >&2
+  exit 1
+fi
+ssh "${ssh_options[@]}" "$target" 'sudo systemctl is-active --quiet avian.service'
+printf 'Avian commit %s is live at http://%s/\n' "$revision" "$EC2_HOST"

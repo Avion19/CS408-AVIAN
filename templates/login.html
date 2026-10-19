@@ -1,0 +1,43 @@
+{{template "header" .}}
+<section class="container auth-section">
+<div class="auth-intro">
+<p class="eyebrow">Welcome to the flock</p>
+<h1>A little curiosity<br>goes a long way.</h1>
+<p>Make a place for your discoveries.<br>Meet people who notice the little things, too.</p>
+<img class="auth-art" src="/static/images/field-notes.svg" width="420" height="364" alt="A goldfinch on a leafy branch">
+</div>
+<div class="auth-card">
+<div class="auth-tabs" role="navigation" aria-label="Account forms">
+<a href="/login?next={{.Next}}"{{if eq .Tab "login"}} class="selected" aria-current="page"{{end}}>Log in</a>
+<a href="/login?tab=register&amp;next={{.Next}}"{{if eq .Tab "register"}} class="selected" aria-current="page"{{end}}>Register</a>
+</div>
+{{if eq .Tab "register"}}<h2>Make yourself at home.</h2>
+<p class="text-secondary">Your next discovery starts here.</p>{{else}}<h2>Good to see you again.</h2>
+<p class="text-secondary">Your field journal is waiting.</p>{{end}}
+{{if .Error}}<div class="alert alert-danger" role="alert" id="form-error">{{.Error}}</div>{{end}}
+<form method="post" action="{{if eq .Tab "register"}}/register{{else}}/login{{end}}">
+<input type="hidden" name="csrf_token" value="{{.CSRF}}">
+<input type="hidden" name="next" value="{{.Next}}">
+<div class="mb-3">
+<label class="form-label" for="email">Email address</label>
+<input class="form-control" id="email" name="email" type="email" autocomplete="email" maxlength="254" value="{{.Email}}" required{{if .Error}} aria-describedby="form-error"{{end}}>
+</div>
+{{if eq .Tab "register"}}<div class="mb-3">
+<label class="form-label" for="username">Username</label>
+<input class="form-control" id="username" name="username" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" value="{{.Username}}" aria-describedby="username-help" required>
+<div id="username-help" class="form-text">3–24 letters, numbers, or underscores. Usernames are saved in lowercase.</div>
+</div>{{end}}
+<div class="mb-3">
+<label class="form-label" for="password">Password</label>
+<input class="form-control" id="password" name="password" type="password" {{if eq .Tab "register"}}autocomplete="new-password" minlength="8" aria-describedby="password-help"{{else}}autocomplete="current-password"{{end}} maxlength="72" required>{{if eq .Tab "register"}}<div id="password-help" class="form-text">At least 8 characters, up to 72 bytes. A longer passphrase works well.</div>{{end}}</div>
+{{if eq .Tab "register"}}<div class="mb-4">
+<label class="form-label" for="confirm-password">Confirm password</label>
+<input class="form-control" id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+</div>{{end}}
+<button class="btn btn-forest w-100" type="submit">{{if eq .Tab "register"}}Create your account{{else}}Log in{{end}} <span aria-hidden="true">→</span>
+</button>
+</form>
+<p class="auth-footnote">{{if eq .Tab "register"}}Already part of the flock? <a href="/login?next={{.Next}}">Log in</a>{{else}}New around here? <a href="/login?tab=register&amp;next={{.Next}}">Join Avian</a>{{end}}</p>
+</div>
+</section>
+{{template "footer" .}}

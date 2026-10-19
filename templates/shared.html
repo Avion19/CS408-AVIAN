@@ -1,0 +1,56 @@
+{{define "header"}}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}} · Avian</title>
+  <link rel="icon" type="image/svg+xml" href="/static/images/mark.svg">
+  <link rel="stylesheet" href="/static/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/avian.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="Avian home">
+<img src="/static/images/mark.svg" alt="" width="34" height="34">avian<span class="brand-dot">.</span>
+</a>
+      <nav class="main-nav" aria-label="Main navigation">{{range .Navigation}}<a href="{{.URL}}"{{if eq $.Active .URL}} class="active" aria-current="page"{{end}}>{{.Label}}</a>{{end}}</nav>
+      <div class="account-nav">{{if .Current}}<a href="/me" class="profile-link">@{{.Current.Username}}</a>
+<form method="post" action="/logout">
+<input type="hidden" name="csrf_token" value="{{.CSRF}}">
+<button class="btn btn-outline-light btn-sm" type="submit">Log out</button>
+</form>{{else}}<a class="login-link" href="/login">Log in</a>
+<a class="btn btn-gold btn-sm" href="/login?tab=register">Join Avian <span aria-hidden="true">↗</span>
+</a>{{end}}</div>
+    </div>
+  </header>
+  <main id="main">{{end}}
+{{define "footer"}}</main>
+  <footer class="site-footer">
+<div class="container footer-top">
+<div>
+<a class="brand footer-brand" href="/">avian<span class="brand-dot">.</span>
+</a>
+<p>A little closer to nature.<br>A little closer to each other.</p>
+</div>
+<nav aria-label="Explore">
+<span class="footer-label">Explore</span>{{range .Navigation}}<a href="{{.URL}}">{{.Label}}</a>{{end}}</nav>
+<nav aria-label="Your field journal">
+<span class="footer-label">Your field journal</span>
+<a href="/me">My profile</a>
+<a href="/chirps/form">Write a chirp</a>
+<a href="/flocks/new">Create a flock</a>{{if not .Current}}<a href="/login">Log in</a>
+<a href="/login?tab=register">Create an account</a>{{end}}</nav>
+<div class="footer-note">
+<span class="footer-label">Leave room for the wild</span>
+<p>Share the experience, protect the habitat. Keep precise nest locations and private addresses out of your observations.</p>
+</div>
+</div>
+<div class="container footer-bottom">
+<span>Avian · A birdwatching community</span>
+<span>Made for curious eyes &amp; open skies.</span>
+</div>
+</footer>
+</body>
+</html>{{end}}

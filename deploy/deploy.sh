@@ -18,7 +18,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 revision="$(git rev-parse HEAD)"
-deploy_tag="${DEPLOY_TAG:-cp2}"
+deploy_tag="${DEPLOY_TAG:-cp3}"
 if [[ "$(git rev-parse "$deploy_tag^{commit}")" != "$revision" ]]; then
   printf 'Deploy from the commit tagged %s.\n' "$deploy_tag" >&2
   exit 1

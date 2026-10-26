@@ -1,6 +1,6 @@
 # Checkpoint 2: shared site, accounts, and deployment
 
-This is preparation for the course checkpoint. No discussion post, video, or peer reviews are submitted by these files.
+This document records the Checkpoint 2 deliverables and verification results.
 
 ## Approved scope
 
@@ -39,17 +39,4 @@ The rows below separate each deliverable from those two paragraphs. Features sch
 - The tagged deployment passed live HTTP checks for every shared destination, Bootstrap and illustration assets, protected return paths, registration, cookie attributes, CSRF rejection, logout, failed/successful login, and safe redirect handling.
 - An actual reboot changed the boot ID from `30a0df7b-218d-4dbf-b954-49cfe917a944` to `413cf90f-412f-466c-97f1-75c768bd6a1a`. Both services returned active and enabled without manual startup. The existing session remained signed in, the public profile excluded email, and logout plus a new login with the stored account succeeded. The public health response remained HTTP 200 with the expected revision.
 
-These checks used the implementation commit before this documentation update. The final `cp2` release is deployed again from its tag, and its exact live revision and diff are verified in the prepared submission report.
-
-## Demo recording outline (under five minutes)
-
-Record in Panopto inside your course reply. Keep the EC2 address bar visible.
-
-1. **0:00–1:15:** Open the live Home. Show the original bird illustration, field-journal palette, species previews, public chirp/empty state, shared header/footer, and navigation links. Explain that features scheduled later have page shells.
-2. **1:15–2:30:** Follow Write a Chirp while signed out. Show the Login/Register tabs, register an account, and demonstrate returning to the requested page with your username in the header. Log out, show a failed login, then log in successfully. Do not expose passwords or secrets.
-3. **2:30–3:30:** Open the cp2 source on GitHub. Briefly show bcrypt and token hashing in `accounts.go`, CSRF verification in `server.go`, and the passing account test results.
-4. **3:30–4:30:** Show the verified EC2 service user/permissions, enabled Nginx and Avian services, boot verification evidence, and the live health header matching the cp2 commit. Finish with the public site after reboot.
-
-## Submission preparation
-
-After the release is verified, use the prepared submission draft with the exact output from `git diff --shortstat cp1 cp2`. Replace its Spec placeholder with your approved Google Doc URL. Verify the GitHub Tag link while signed out. Record the Panopto video yourself; no video is claimed by this repository. Peer reviews require two actual classmates' posts and remain a separate course activity.
+The reboot checks used implementation commit `9f72f84`. The final `cp2` commit, `24329e3`, adds documentation; the final public health response was verified against that tagged revision.

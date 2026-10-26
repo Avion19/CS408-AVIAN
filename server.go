@@ -15,7 +15,6 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -39,6 +38,8 @@ type pageData struct {
 	Navigation                                                      []navigationLink
 	Species                                                         []Species
 	Chirps                                                          []ChirpPreview
+	Memberships                                                     []FlockMembership
+	Owner, Editing                                                  bool
 }
 
 type application struct {
@@ -97,6 +98,8 @@ func newServer(store *Store) (*echo.Echo, error) {
 		return c.Redirect(http.StatusSeeOther, fmt.Sprintf("/members/%d", member.ID))
 	})
 	e.GET("/members/:id", a.profile)
+	e.POST("/members/:id", a.updateProfile)
+	e.POST("/members/:id/delete", a.deleteAccount)
 	e.GET("/species", func(c echo.Context) error {
 		species, err := store.Species(c.Request().Context())
 		if err != nil {
@@ -338,19 +341,4 @@ func (a *application) logout(c echo.Context) error {
 	a.setCookie(c, sessionCookie, "", -time.Hour)
 	a.setCookie(c, csrfCookie, "", -time.Hour)
 	return c.Redirect(http.StatusSeeOther, "/")
-}
-
-func (a *application) profile(c echo.Context) error {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil || id < 1 {
-		return echo.NewHTTPError(http.StatusNotFound, "This member could not be found.")
-	}
-	member, err := a.store.Member(c.Request().Context(), id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return echo.NewHTTPError(http.StatusNotFound, "This member could not be found.")
-	}
-	if err != nil {
-		return err
-	}
-	return a.render(c, http.StatusOK, "profile.html", pageData{Title: member.DisplayName, Profile: member})
 }

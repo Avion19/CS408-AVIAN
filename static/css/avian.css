@@ -763,3 +763,64 @@ h3 {
 }
 
 }
+
+.profile-page {
+  min-height:60vh
+}
+.profile-layout {
+  display:grid;
+  grid-template-columns:minmax(0,2fr) minmax(0,1fr);
+  gap:64px
+}
+.profile-main h1 {
+  font-size:clamp(2.4rem,5vw,3.8rem);
+  overflow-wrap:anywhere
+}
+.profile-bio, .chirp-content {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere
+}
+.profile-region, .profile-flocks {
+  overflow-wrap:anywhere
+}
+.profile-editor {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:28px
+}
+.profile-chirps {
+  margin-top:48px
+}
+.profile-flocks {
+  border-left:1px solid var(--line);
+  padding-left:32px
+}
+.profile-flocks h2, .profile-chirps h2, .account-deletion h2, .profile-editor h2 {
+  font-size:1.8rem
+}
+.account-deletion {
+  margin-top:48px;
+  border-top:1px solid var(--line);
+  padding-top:28px
+}
+.account-deletion summary {
+  color:#a33232;
+  cursor:pointer
+}
+@media(max-width:850px) {
+  .profile-layout {
+    grid-template-columns:1fr;
+    gap:40px
+  }
+  .profile-flocks {
+    border-left:0;
+    border-top:1px solid var(--line);
+    padding:28px 0 0
+  }
+}
+@media(max-width:540px) {
+  .profile-editor {
+    padding:20px
+  }
+}

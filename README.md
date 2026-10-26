@@ -1,8 +1,8 @@
 # Avian
 
-Avian is a birdwatching community application for CS 408 built with Go, Echo, SQLite, and server-rendered HTML. Checkpoint 2 adds the shared site design, finished Home page, registration, login/logout, persisted sessions, CSRF protection, and a verified EC2 release.
+Avian is a birdwatching community application for CS 408 built with Go, Echo, SQLite, and server-rendered HTML. Checkpoint 3 adds complete public member profiles, inline profile editing, and confirmed account deletion with owner permissions and session cleanup.
 
-The Checkpoint 2 scope and evidence are in [docs/checkpoint-2.md](docs/checkpoint-2.md). Feed, Species detail/photos, profile editing, chirp management, flocks, and observation search follow the approved schedule; their navigation destinations currently share the site layout and explain their availability. The existing species catalog and basic member identity display are available now.
+The implementation report is in [docs/checkpoint-3.md](docs/checkpoint-3.md); the earlier shared-site and deployment work is recorded in [docs/checkpoint-2.md](docs/checkpoint-2.md). Feed, Species detail/photos, chirp management, flock management, and observation search follow the approved schedule; their navigation destinations currently share the site layout and explain their availability. The species catalog and member profiles read persisted records now.
 
 ## Run from a fresh clone
 
@@ -37,7 +37,11 @@ All pages share a header, footer, local Bootstrap styles, the field-journal pale
 
 Authentication uses a cryptographically random token in an HttpOnly, SameSite=Lax cookie with a seven-day expiration. SQLite stores only its SHA-256 hash, a separate CSRF token, and expiration; sessions persist through server restarts. Anonymous CSRF tokens are signed with HMAC-SHA256. Every state-changing route, including login and registration, requires its form token. Login rotates the session and CSRF token. `POST /logout` deletes the session and clears the cookies; `GET /logout` does not log anyone out. Expired sessions are rejected. Return destinations are restricted to local paths. Authenticated pages use `Cache-Control: no-store`.
 
-`GET /members/:id` displays public identity only; emails and password hashes never appear in profiles. Profile editing and account deletion belong to Checkpoint 3. `GET /api/health` checks the database and reports the deployed source commit in its `X-Avian-Revision` header.
+`GET /members/:id` displays public identity, bio, broad region, the ten newest public chirps, and linked flock memberships. Emails, credentials, and flock-only chirps never appear in profiles, even for the profile owner. Empty profiles have explicit empty states. Only the signed-in owner sees Edit Profile and account deletion controls.
+
+`GET /members/:id?edit=1` opens a prefilled inline form on the same page. `POST /members/:id` validates and saves username, display name, region, and bio. Usernames use the registration rules and case-insensitive uniqueness; display names require 1–80 characters, optional regions allow 100, and optional bios allow 500. Text limits count Unicode characters. Failed validation retains the form and entered values; success redirects to the profile. Public text is escaped by Go templates. Email, credentials, member IDs, and account ownership cannot be edited through this form.
+
+`POST /members/:id/delete` requires the owner's authenticated session, CSRF token, and an explicit permanent-deletion confirmation. A transaction blocks any current flock owner, repairs original-creator references after a completed ownership transfer, and deletes the account with its profile, all sessions, chirps, tags, and memberships through foreign-key cascades. Chirp photos are cleaned up after commit, restricted to filenames inside `UPLOAD_DIR`; failures are logged. Both session and CSRF cookies are cleared. Flock ownership-transfer controls arrive in Checkpoint 5; fixture memberships exercise the deletion restrictions now. Profile writes reject guests with HTTP 401, other members with 403, and invalid or missing member IDs with 404. Unconfirmed deletion returns 422; ownership conflicts return 409. `GET /api/health` checks the database and reports the deployed source commit in its `X-Avian-Revision` header.
 
 ## Database
 
@@ -47,7 +51,7 @@ The eight core tables are `users`, `members`, `sessions`, `species`, `flocks`, `
 
 ## EC2 setup and deployment
 
-The Checkpoint 2 instance is <http://ec2-52-89-244-87.us-west-2.compute.amazonaws.com/>. Allow public HTTP on port 80 and restrict SSH to your address. Port 8080 stays private. The local deployment machine needs Git, Go (or the toolchain from `start.sh`), SSH, SCP, rsync, and curl.
+The EC2 instance is <http://ec2-52-89-244-87.us-west-2.compute.amazonaws.com/>. Allow public HTTP on port 80 and restrict SSH to your address. Port 8080 stays private. The local deployment machine needs Git, Go (or the toolchain from `start.sh`), SSH, SCP, rsync, and curl.
 
 For initial setup, copy `deploy/` to your Ubuntu LTS server and run there:
 
@@ -61,10 +65,10 @@ Commit and tag the tested release, then deploy from that exact commit:
 
 ```bash
 EC2_HOST=ec2-52-89-244-87.us-west-2.compute.amazonaws.com \
-SSH_KEY_PATH=/path/to/key.pem DEPLOY_TAG=cp2 bash deploy/deploy.sh
+SSH_KEY_PATH=/path/to/key.pem DEPLOY_TAG=cp3 bash deploy/deploy.sh
 ```
 
-`EC2_USER` defaults to `ubuntu`; `DEPLOY_TAG` defaults to `cp2` and can name a later checkpoint. Deployment rejects uncommitted changes and a HEAD that differs from the requested tag. It detects the instance architecture, cross-compiles the Go binary with the source revision, transfers the binary and static assets, atomically replaces the executable, restarts the service, and verifies the revision over public HTTP. Templates and migrations are embedded. Database, uploads, and server configuration are retained.
+`EC2_USER` defaults to `ubuntu`; `DEPLOY_TAG` defaults to `cp3` and can name a later checkpoint. Deployment rejects uncommitted changes and a HEAD that differs from the requested tag. It detects the instance architecture, cross-compiles the Go binary with the source revision, transfers the binary and static assets, atomically replaces the executable, restarts the service, and verifies the revision over public HTTP. Templates and migrations are embedded. Database, uploads, and server configuration are retained.
 
 Useful server checks:
 
@@ -88,7 +92,9 @@ bash -n start.sh deploy/setup-ec2.sh deploy/deploy.sh
 
 The tests use temporary SQLite databases and real HTTP handlers. They cover migrations and repeatable seeds; registration validation and transactional duplicate rejection; bcrypt and session-hash storage; successful/failed login; session restoration, expiration, and revocation; CSRF failures and rotation; safe redirect destinations; shared navigation; missing members; and Home's newest-three public-only previews and HTML escaping. Secure-cookie configuration is tested separately.
 
-For a clean startup check, clone the submitted tag into a new directory and run `./start.sh` there without copying `.env`, `.tools`, or `data`. Check Home, local Bootstrap and artwork assets, registration, logout, and login. The Checkpoint 2 release notes record the deployment and fresh-clone checks.
+The profile tests additionally cover persisted inline edits, Unicode field limits, duplicate usernames, escaped content, public-only chirps, membership links, guest and cross-account write rejection, explicit deletion confirmation, all-session revocation, dependent-row and photo cleanup, owner rejection, transferred creator references, and transactional rollback. Database reopen checks verify saved edits and sessions survive a restart.
+
+For a clean startup check, clone the submitted tag into a new directory and run `./start.sh` there without copying `.env`, `.tools`, or `data`. Check Home, local Bootstrap and artwork assets, registration, logout, and login. The Checkpoint 3 report describes the implementation and verification.
 
 ## Media credits
 

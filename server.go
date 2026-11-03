@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"mime"
 	"net/http"
 	"net/mail"
 	"net/url"
@@ -40,6 +41,12 @@ type pageData struct {
 	Chirps                                                          []ChirpPreview
 	Memberships                                                     []FlockMembership
 	Owner, Editing                                                  bool
+	Timeline                                                        []Chirp
+	Form                                                            ChirpForm
+	SelectedSpecies                                                 *Species
+	Query, PreviousURL, NextURL                                     string
+	Page                                                            int
+	HasMore                                                         bool
 }
 
 type application struct {
@@ -100,24 +107,21 @@ func newServer(store *Store) (*echo.Echo, error) {
 	e.GET("/members/:id", a.profile)
 	e.POST("/members/:id", a.updateProfile)
 	e.POST("/members/:id/delete", a.deleteAccount)
-	e.GET("/species", func(c echo.Context) error {
-		species, err := store.Species(c.Request().Context())
-		if err != nil {
-			return err
-		}
-		return a.render(c, http.StatusOK, "species.html", pageData{Title: "Species", Active: "/species", Species: species})
-	})
-	// Every planned destination has a shared shell now. Later checkpoints add
-	// editing, search, feeds, and group behavior; these do not claim those features.
+	e.GET("/species", a.speciesPage)
+	e.GET("/feed", a.feed)
+	e.GET("/chirps/form", a.chirpForm)
+	e.POST("/chirps/form", a.saveChirp)
+	e.POST("/chirps/:id/delete", a.deleteChirp)
+	e.GET("/chirps/:id/photo", a.chirpPhoto)
+	// The remaining flock and observation-search destinations share the layout
+	// until their scheduled implementations in Checkpoints 5 and 6.
 	for _, route := range []struct {
 		path, title, message string
 		protected            bool
 	}{
-		{"/feed", "Your birding community", "Chirps from the community will gather here. In the meantime, explore the birds in our catalog.", false},
 		{"/flocks", "Find your flock", "A shared interest. A favorite patch of woodland. A new birding companion. Flock discovery is coming soon.", false},
 		{"/flocks/new", "Start a flock", "Your next birding group starts here. Flock creation is coming soon.", true},
 		{"/flocks/:id", "Flock", "Flock pages are coming soon. Explore our species catalog while the community takes shape.", false},
-		{"/chirps/form", "Write a chirp", "A flash of color, a familiar call, a bird you have never seen before. You will soon be able to record it here.", true},
 		{"/search", "Explore observations", "Search for birds and observations across the community. Observation search is coming soon.", false},
 	} {
 		route := route
@@ -184,7 +188,11 @@ func (a *application) protect(next echo.HandlerFunc) echo.HandlerFunc {
 		if strings.HasPrefix(c.Request().URL.Path, "/static/") || c.Request().URL.Path == "/api/health" {
 			return next(c)
 		}
-		c.Request().Body = http.MaxBytesReader(c.Response(), c.Request().Body, 64<<10)
+		limit := int64(64 << 10)
+		if c.Request().Method == http.MethodPost && c.Request().URL.Path == "/chirps/form" {
+			limit = maxChirpRequestBytes
+		}
+		c.Request().Body = http.MaxBytesReader(c.Response(), c.Request().Body, limit)
 		c.Response().Header().Set("Cache-Control", "no-store")
 		csrf := ""
 		if cookie, err := c.Cookie(sessionCookie); err == nil {
@@ -205,7 +213,21 @@ func (a *application) protect(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		unsafe := c.Request().Method != http.MethodGet && c.Request().Method != http.MethodHead && c.Request().Method != http.MethodOptions
 		if unsafe {
-			if err := c.Request().ParseForm(); err != nil {
+			var parseErr error
+			mediaType, _, _ := mime.ParseMediaType(c.Request().Header.Get("Content-Type"))
+			if mediaType == "multipart/form-data" {
+				parseErr = c.Request().ParseMultipartForm(maxChirpRequestBytes)
+				if c.Request().MultipartForm != nil {
+					defer c.Request().MultipartForm.RemoveAll()
+				}
+			} else {
+				parseErr = c.Request().ParseForm()
+			}
+			if parseErr != nil {
+				var tooLarge *http.MaxBytesError
+				if errors.As(parseErr, &tooLarge) {
+					return echo.NewHTTPError(http.StatusRequestEntityTooLarge, "The form is too large. Choose one photo no larger than 5 MB.")
+				}
 				return echo.NewHTTPError(http.StatusBadRequest, "The form could not be read. Please reload and try again.")
 			}
 			submitted := c.Request().PostForm.Get("csrf_token")

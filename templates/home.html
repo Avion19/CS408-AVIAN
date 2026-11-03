@@ -62,6 +62,7 @@
 </div>
 <div class="row g-4">{{range .Species}}<div class="col-md-4">
 <article class="species-card h-100">
+{{if .ImagePath}}<a href="/species?selected={{.ID}}"><img class="catalog-photo mb-3" src="{{.ImagePath}}" alt="{{.CommonName}} reference photograph" width="480" height="320" loading="lazy"></a><p class="photo-credit">{{.ImageAuthor}} · <a href="{{.ImageSourceURL}}">Source</a> · <a href="{{.ImageLicenseURL}}">{{.ImageLicense}}</a></p>{{end}}
 <span class="card-label">From the field guide</span>
 <h3>
 <a href="/species?selected={{.ID}}">{{.CommonName}}</a>

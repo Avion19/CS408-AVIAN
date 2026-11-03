@@ -1,0 +1,6 @@
+{{template "header" .}}
+<section class="container page-section timeline-page">
+<div class="section-heading"><div><p class="eyebrow">From the community</p><h1>Your birding community.</h1><p>Public observations{{if .Current}} and chirps from your flocks{{end}}, newest first.</p></div><a class="btn btn-forest" href="/chirps/form">Write a chirp</a></div>
+{{template "chirp-list" .}}
+{{template "pagination" .}}
+</section>{{template "footer" .}}

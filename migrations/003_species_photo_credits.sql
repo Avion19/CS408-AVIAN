@@ -1,0 +1,4 @@
+ALTER TABLE species ADD COLUMN image_author TEXT NOT NULL DEFAULT '';
+ALTER TABLE species ADD COLUMN image_source_url TEXT NOT NULL DEFAULT '';
+ALTER TABLE species ADD COLUMN image_license TEXT NOT NULL DEFAULT '';
+ALTER TABLE species ADD COLUMN image_license_url TEXT NOT NULL DEFAULT '';

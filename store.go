@@ -21,15 +21,16 @@ var migrationFiles embed.FS
 // Store owns the application's SQLite connection pool.
 type Store struct{ db *sql.DB }
 
-// Species is the catalog data displayed on the Checkpoint 1 Home page.
+// Species contains public field-guide information and reference-photo credits.
 type Species struct {
-	ID             int64
-	CommonName     string
-	ScientificName string
-	Description    string
-	Habitat        string
-	SourceName     string
-	SourceURL      string
+	ID                                                                    int64
+	CommonName                                                            string
+	ScientificName                                                        string
+	Description                                                           string
+	Habitat                                                               string
+	SourceName                                                            string
+	SourceURL                                                             string
+	ImagePath, ImageAuthor, ImageSourceURL, ImageLicense, ImageLicenseURL string
 }
 
 // OpenStore opens SQLite and enables connection-level safety settings.
@@ -108,7 +109,8 @@ func (s *Store) Initialize() error {
 
 // Species returns the current catalog in a stable display order.
 func (s *Store) Species(ctx context.Context) ([]Species, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT id, common_name, scientific_name, description, habitat, source_name, source_url
+	rows, err := s.db.QueryContext(ctx, `SELECT id, common_name, scientific_name, description, habitat, source_name, source_url,
+        COALESCE(image_path, ''), image_author, image_source_url, image_license, image_license_url
 		FROM species ORDER BY common_name`)
 	if err != nil {
 		return nil, err
@@ -117,7 +119,8 @@ func (s *Store) Species(ctx context.Context) ([]Species, error) {
 	var result []Species
 	for rows.Next() {
 		var bird Species
-		if err := rows.Scan(&bird.ID, &bird.CommonName, &bird.ScientificName, &bird.Description, &bird.Habitat, &bird.SourceName, &bird.SourceURL); err != nil {
+		if err := rows.Scan(&bird.ID, &bird.CommonName, &bird.ScientificName, &bird.Description, &bird.Habitat, &bird.SourceName, &bird.SourceURL,
+			&bird.ImagePath, &bird.ImageAuthor, &bird.ImageSourceURL, &bird.ImageLicense, &bird.ImageLicenseURL); err != nil {
 			return nil, err
 		}
 		result = append(result, bird)

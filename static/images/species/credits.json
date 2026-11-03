@@ -1,0 +1,110 @@
+[
+  {
+    "common_name": "American Goldfinch",
+    "image_path": "/static/images/species/american-goldfinch.jpg",
+    "author": "Rodney Campbell",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Carduelis_tristis_-Michigan,_USA_-male-8.jpg",
+    "license": "CC BY 2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "American Robin",
+    "image_path": "/static/images/species/american-robin.jpg",
+    "author": "PookieFugglestein",
+    "source_url": "https://commons.wikimedia.org/wiki/File:American_Robin_3.JPG",
+    "license": "CC0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "Black-capped Chickadee",
+    "image_path": "/static/images/species/black-capped-chickadee.jpg",
+    "author": "No machine-readable author provided. Mdf assumed (based on copyright claims).",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Poecile-atricapilla-001.jpg",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "Canada Goose",
+    "image_path": "/static/images/species/canada-goose.jpg",
+    "author": "USFWS Mountain-Prairie",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Canada_goose_on_Seedskadee_NWR_(27826185489).jpg",
+    "license": "Public domain",
+    "license_url": "https://commons.wikimedia.org/wiki/Commons:Public_domain",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "Dark-eyed Junco",
+    "image_path": "/static/images/species/dark-eyed-junco.jpg",
+    "author": "Cephas",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Junco_hyemalis_hyemalis_CT1_(cropped).jpg",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "European Starling",
+    "image_path": "/static/images/species/european-starling.jpg",
+    "author": "Charles J. Sharp",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Common_starling_(Sturnus_vulgaris)_breeding_male_Marken.jpg",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "House Finch",
+    "image_path": "/static/images/species/house-finch.jpg",
+    "author": "Rhododendrites",
+    "source_url": "https://commons.wikimedia.org/wiki/File:House_finch_(33688)2.jpg",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "Mallard",
+    "image_path": "/static/images/species/mallard.jpg",
+    "author": "This picture was realized by Richard Bartz by using a Canon EF 70-300mm f/4-5.6 IS USM Lens",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Anas_platyrhynchos_male_female_quadrat.jpg",
+    "license": "CC BY-SA 2.5",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.5",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "Mourning Dove",
+    "image_path": "/static/images/species/mourning-dove.jpg",
+    "author": "Rhododendrites",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Mourning_dove_perched_(61179).jpg",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "Northern Flicker",
+    "image_path": "/static/images/species/northern-flicker.jpg",
+    "author": "Rhododendrites",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Northern_yellow-shafted_flicker_male_(33737)_(cropped).jpg",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "Red-tailed Hawk",
+    "image_path": "/static/images/species/red-tailed-hawk.jpg",
+    "author": "Becky Matsubara from El Sobrante, California",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Red-tailed_Hawk_(45812546121).jpg",
+    "license": "CC BY 2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  },
+  {
+    "common_name": "Song Sparrow",
+    "image_path": "/static/images/species/song-sparrow.jpg",
+    "author": "Rhododendrites",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Song_sparrow_in_Prospect_Park_(93031).jpg",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+    "changes": "Wikimedia thumbnail resized to 960 px; displayed with CSS cropping."
+  }
+]

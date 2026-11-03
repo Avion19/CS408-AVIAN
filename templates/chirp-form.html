@@ -1,0 +1,20 @@
+{{template "header" .}}
+<section class="container page-section chirp-form-page">
+<p class="eyebrow">Your field journal</p><h1>{{.Title}}</h1>
+<p>Share what you noticed. Keep exact nest locations and private addresses out of your observation.</p>
+{{if .Error}}<div class="alert alert-danger" role="alert">{{.Error}} Any photo must be selected again before saving.</div>{{end}}
+<form method="post" action="/chirps/form" enctype="multipart/form-data" class="profile-editor">
+<input type="hidden" name="csrf_token" value="{{.CSRF}}">{{if .Form.ID}}<input type="hidden" name="id" value="{{.Form.ID}}">{{end}}
+<div class="mb-4"><label class="form-label" for="chirp-content">Your observation</label><textarea class="form-control" id="chirp-content" name="content" rows="5" required aria-describedby="content-help">{{.Form.Content}}</textarea><p class="form-text" id="content-help">1–500 characters.</p></div>
+<fieldset class="mb-4"><legend class="h5">Tag species <span class="small">(optional)</span></legend><div class="species-choices">{{range .Species}}<label><input type="checkbox" name="species_id" value="{{.ID}}"{{if index $.Form.SelectedSpecies .ID}} checked{{end}}> {{.CommonName}}</label>{{end}}</div></fieldset>
+<fieldset class="mb-4"><legend class="h5">Who can see this chirp?</legend>
+<label class="d-block"><input type="radio" name="visibility" value="public"{{if eq .Form.Visibility "public"}} checked{{end}} required> Public — everyone</label>
+<label class="d-block"><input type="radio" name="visibility" value="flock"{{if eq .Form.Visibility "flock"}} checked{{end}} required> Flock only — current members of the selected flock</label>
+<label class="form-label mt-3" for="chirp-flock">Flock destination</label><select name="flock_id" id="chirp-flock" class="form-control"><option value="">No flock (public chirps only)</option>{{range .Memberships}}<option value="{{.ID}}"{{if eq $.Form.FlockID (printf "%d" .ID)}} selected{{end}}>{{.Name}}</option>{{end}}</select>
+<p class="form-text">Choose one of your flocks to associate a public chirp or share a flock-only observation.{{if not .Memberships}} You do not belong to any flocks yet.{{end}}</p></fieldset>
+<fieldset class="mb-4"><legend class="h5">Observation photo <span class="small">(optional)</span></legend>
+{{if .Form.ImagePath}}<p><a href="/chirps/{{.Form.ID}}/photo">View current photo</a></p><label class="d-block mb-3"><input type="checkbox" name="remove_photo" value="yes"{{if .Form.RemovePhoto}} checked{{end}}> Remove current photo</label>{{end}}
+<label class="form-label" for="chirp-photo">{{if .Form.ImagePath}}Replace photo{{else}}Attach one photo{{end}}</label><input class="form-control" type="file" id="chirp-photo" name="photo" accept="image/jpeg,image/png" aria-describedby="photo-help"><p class="form-text" id="photo-help">JPEG or PNG, up to 5 MB and 3000 × 3000 pixels. Location metadata is removed. A replacement takes the place of the current photo.</p>
+<label><input type="checkbox" name="photo_permission" value="yes"{{if .Form.PhotoPermission}} checked{{end}}> I own or have permission to share the photo I am uploading.</label></fieldset>
+<div class="d-flex gap-3"><button class="btn btn-forest" type="submit">{{if .Form.ID}}Save changes{{else}}Publish chirp{{end}}</button><a class="btn btn-outline-forest" href="/feed">Cancel</a></div>
+</form></section>{{template "footer" .}}

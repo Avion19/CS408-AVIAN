@@ -1,0 +1,15 @@
+{{define "chirp-list"}}
+<div class="chirp-list">{{range .Timeline}}
+<article class="species-card mb-4" id="chirp-{{.ID}}">
+<a class="author-link" href="/members/{{.MemberID}}">{{.DisplayName}} <span>@{{.Username}}</span></a>
+<p class="chirp-content">{{.Content}}</p>
+{{if .ImagePath}}<a href="/chirps/{{.ID}}/photo"><img class="observation-photo" src="/chirps/{{.ID}}/photo" alt="Observation photo shared by {{.DisplayName}}" loading="lazy"></a>{{end}}
+<ul class="species-tags" aria-label="Tagged species">{{range .Species}}<li><a href="/species?selected={{.ID}}">{{.CommonName}}</a></li>{{end}}</ul>
+<p class="small"><time datetime="{{.CreatedAt}}">{{.CreatedAt}}</time> · {{if eq .Visibility "flock"}}Flock only{{else}}Public{{end}}{{if .FlockID.Valid}} · <a href="/flocks/{{.FlockID.Int64}}">{{.FlockName.String}}</a>{{end}}</p>
+{{if .CanEdit}}<div class="chirp-actions"><a href="/chirps/form?id={{.ID}}">Edit chirp</a>
+<details><summary>Delete chirp</summary><form method="post" action="/chirps/{{.ID}}/delete" class="mt-3"><input type="hidden" name="csrf_token" value="{{$.CSRF}}"><label><input type="checkbox" name="confirm_delete" value="yes" required> Permanently delete this chirp and its photo.</label><button type="submit" class="btn btn-outline-danger btn-sm d-block mt-2">Delete permanently</button></form></details></div>{{end}}
+</article>{{else}}<p class="empty-state">No observations to show here yet.</p>{{end}}</div>
+{{end}}
+{{define "pagination"}}
+{{if or (gt .Page 1) .HasMore}}<nav class="pagination-links" aria-label="Chirp pages">{{if gt .Page 1}}<a class="btn btn-outline-forest" href="{{.PreviousURL}}">Newer chirps</a>{{end}}<span>Page {{.Page}}</span>{{if .HasMore}}<a class="btn btn-outline-forest" href="{{.NextURL}}">Older chirps</a>{{end}}</nav>{{end}}
+{{end}}

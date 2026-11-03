@@ -1,11 +1,13 @@
 package main
 
 import (
+	_ "embed"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
 
-// seedBirds is project-owned catalog content. Images are added in Checkpoint 4.
+// seedBirds is project-owned catalog content.
 var seedBirds = []struct{ common, scientific, description, habitat string }{
 	{"American Goldfinch", "Spinus tristis", "A small finch with a bouncing flight and bright breeding plumage.", "Fields, gardens, and open areas with seed-bearing plants."},
 	{"American Robin", "Turdus migratorius", "A familiar thrush often seen searching lawns for food.", "Lawns, parks, woodland edges, and neighborhoods."},
@@ -21,9 +23,25 @@ var seedBirds = []struct{ common, scientific, description, habitat string }{
 	{"Song Sparrow", "Melospiza melodia", "A streaked sparrow known for its varied song.", "Shrubby edges, wetlands, gardens, and fields."},
 }
 
+//go:embed static/images/species/credits.json
+var speciesPhotoCredits []byte
+
+type speciesPhotoCredit struct {
+	CommonName string `json:"common_name"`
+	ImagePath  string `json:"image_path"`
+	Author     string `json:"author"`
+	SourceURL  string `json:"source_url"`
+	License    string `json:"license"`
+	LicenseURL string `json:"license_url"`
+}
+
 // seedSpecies can run on every startup. Existing catalog rows keep their IDs
 // and any later edits because common_name is unique and conflicts are ignored.
 func (s *Store) seedSpecies() error {
+	var credits []speciesPhotoCredit
+	if err := json.Unmarshal(speciesPhotoCredits, &credits); err != nil {
+		return fmt.Errorf("read species photo credits: %w", err)
+	}
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
@@ -39,6 +57,13 @@ func (s *Store) seedSpecies() error {
 			"Cornell Lab All About Birds", "https://www.allaboutbirds.org/guide/"+slug)
 		if err != nil {
 			return fmt.Errorf("seed %s: %w", bird.common, err)
+		}
+	}
+	// Upgrade existing catalogs without replacing their identities or descriptions.
+	for _, photo := range credits {
+		if _, err := tx.Exec(`UPDATE species SET image_path = ?, image_author = ?, image_source_url = ?, image_license = ?, image_license_url = ?
+		 WHERE common_name = ? AND (image_path IS NULL OR image_path = '')`, photo.ImagePath, photo.Author, photo.SourceURL, photo.License, photo.LicenseURL, photo.CommonName); err != nil {
+			return fmt.Errorf("seed photo %s: %w", photo.CommonName, err)
 		}
 	}
 	return tx.Commit()
